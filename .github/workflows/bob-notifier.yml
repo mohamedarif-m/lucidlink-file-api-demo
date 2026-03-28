@@ -1,0 +1,132 @@
+name: Bob Issue Notifier
+
+on:
+  schedule:
+    # Run every 5 minutes
+    - cron: '*/5 * * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+  
+  # Trigger on new issues
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  notify-bob-issues:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Check for Bob-labeled issues
+        id: check_issues
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🤖 Checking for issues labeled 'bob', 'ai-task', or 'enhancement'..."
+          
+          # Fetch open issues with Bob labels
+          ISSUES=$(gh issue list \
+            --label "bob,ai-task,enhancement" \
+            --state open \
+            --json number,title,labels,createdAt,url \
+            --jq 'map(select(.labels | map(.name) | any(. == "bob" or . == "ai-task" or . == "enhancement")))')
+          
+          echo "Found issues:"
+          echo "$ISSUES" | jq '.'
+          
+          # Count issues
+          ISSUE_COUNT=$(echo "$ISSUES" | jq 'length')
+          echo "issue_count=$ISSUE_COUNT" >> $GITHUB_OUTPUT
+          
+          # Save issues for next step
+          echo "$ISSUES" > issues.json
+      
+      - name: Comment on new Bob issues
+        if: steps.check_issues.outputs.issue_count > 0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "📝 Processing issues..."
+          
+          # Read issues
+          ISSUES=$(cat issues.json)
+          
+          # Process each issue
+          echo "$ISSUES" | jq -c '.[]' | while read -r issue; do
+            ISSUE_NUMBER=$(echo "$issue" | jq -r '.number')
+            ISSUE_TITLE=$(echo "$issue" | jq -r '.title')
+            ISSUE_URL=$(echo "$issue" | jq -r '.url')
+            
+            echo "Processing issue #$ISSUE_NUMBER: $ISSUE_TITLE"
+            
+            # Check if Bob has already commented
+            EXISTING_COMMENT=$(gh issue view $ISSUE_NUMBER --json comments --jq '.comments[] | select(.author.login == "github-actions[bot]" and (.body | contains("🤖 Bob Notifier")))')
+            
+            if [ -z "$EXISTING_COMMENT" ]; then
+              echo "Adding Bob notification comment to issue #$ISSUE_NUMBER"
+              
+              gh issue comment $ISSUE_NUMBER --body "🤖 **Bob Notifier**
+
+This issue has been detected by Bob's automated monitoring system.
+
+**Status:** Ready for Bob to work on
+**Labels:** $(echo "$issue" | jq -r '.labels[].name' | tr '\n' ', ' | sed 's/,$//')
+**Detected:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+---
+
+**To assign this to Bob:**
+1. Open VS Code with Bob
+2. Tell Bob: \`Work on GitHub issue #$ISSUE_NUMBER\`
+3. Bob will create a branch, make changes, and open a PR
+
+**Or wait for automatic polling** (if configured)
+
+---
+*This is an automated notification. Bob will work on this issue based on your configuration.*"
+            else
+              echo "Bob has already been notified about issue #$ISSUE_NUMBER"
+            fi
+          done
+      
+      - name: Create summary
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "## 🤖 Bob Issue Monitoring Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run Time:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Get issue counts
+          TOTAL_OPEN=$(gh issue list --state open --json number | jq 'length')
+          BOB_ISSUES=$(gh issue list --label "bob,ai-task,enhancement" --state open --json number | jq 'length')
+          
+          echo "**Total Open Issues:** $TOTAL_OPEN" >> $GITHUB_STEP_SUMMARY
+          echo "**Issues for Bob:** $BOB_ISSUES" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$BOB_ISSUES" -gt 0 ]; then
+            echo "### 📋 Issues Ready for Bob:" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            gh issue list --label "bob,ai-task,enhancement" --state open --json number,title,url | \
+              jq -r '.[] | "- [#\(.number)](\(.url)) \(.title)"' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No issues currently need Bob's attention" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*Next check in 5 minutes*" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Send notification (optional)
+        if: steps.check_issues.outputs.issue_count > 0
+        run: |
+          echo "🔔 ${{ steps.check_issues.outputs.issue_count }} issue(s) need Bob's attention!"
+          echo "Check the Actions tab for details"
+
+# Made with Bob
