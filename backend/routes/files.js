@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const fileService = require('../services/fileService');
+const validator = require('../utils/validator');
 
 /**
  * GET /api/files
@@ -28,6 +29,15 @@ router.get('/', async (req, res) => {
  */
 router.post('/upload', async (req, res) => {
   try {
+    // Validate file data before upload
+    const validation = validator.validateFile(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({
+        success: false,
+        error: validation.error
+      });
+    }
+
     const file = await fileService.uploadFile(req.body);
     res.status(201).json({
       success: true,
@@ -35,9 +45,9 @@ router.post('/upload', async (req, res) => {
       data: file
     });
   } catch (error) {
-    res.status(400).json({ 
+    res.status(400).json({
       success: false,
-      error: error.message 
+      error: error.message
     });
   }
 });

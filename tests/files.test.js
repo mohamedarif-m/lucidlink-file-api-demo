@@ -81,6 +81,70 @@ describe('File API Endpoints', () => {
       expect(response.body.success).toBe(false);
       expect(response.body.error).toContain('size');
     });
+
+    test('should reject file exceeding 100MB size limit', async () => {
+      const fileData = {
+        name: 'large-file.mp4',
+        size: 101 * 1024 * 1024, // 101MB
+        type: 'video/mp4'
+      };
+
+      const response = await request(app)
+        .post('/api/files/upload')
+        .send(fileData);
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toContain('100MB');
+    });
+
+    test('should accept file at exactly 100MB', async () => {
+      const fileData = {
+        name: 'max-size-file.mp4',
+        size: 100 * 1024 * 1024, // Exactly 100MB
+        type: 'video/mp4'
+      };
+
+      const response = await request(app)
+        .post('/api/files/upload')
+        .send(fileData);
+
+      expect(response.status).toBe(201);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.size).toBe(100 * 1024 * 1024);
+    });
+
+    test('should reject file with zero size', async () => {
+      const fileData = {
+        name: 'empty-file.txt',
+        size: 0,
+        type: 'text/plain'
+      };
+
+      const response = await request(app)
+        .post('/api/files/upload')
+        .send(fileData);
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toContain('greater than 0');
+    });
+
+    test('should reject file with negative size', async () => {
+      const fileData = {
+        name: 'invalid-file.txt',
+        size: -1024,
+        type: 'text/plain'
+      };
+
+      const response = await request(app)
+        .post('/api/files/upload')
+        .send(fileData);
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toContain('greater than 0');
+    });
   });
 
   describe('GET /api/files/:id', () => {
