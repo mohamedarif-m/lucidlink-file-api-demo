@@ -3,8 +3,10 @@ import { fileAPI } from './api/client';
 import UploadForm from './components/UploadForm';
 import FileList from './components/FileList';
 import StorageStats from './components/StorageStats';
+import LucidLinkDashboard from './components/LucidLinkDashboard';
 
 function App() {
+  const [currentView, setCurrentView] = useState('files'); // 'files' or 'lucidlink'
   const [files, setFiles] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -97,10 +99,25 @@ function App() {
             </div>
           </div>
           <div className="header-actions">
-            <span style={{ 
-              fontSize: '0.875rem', 
+            <nav className="nav-tabs">
+              <button
+                className={`nav-tab ${currentView === 'files' ? 'active' : ''}`}
+                onClick={() => setCurrentView('files')}
+              >
+                📁 File Manager
+              </button>
+              <button
+                className={`nav-tab ${currentView === 'lucidlink' ? 'active' : ''}`}
+                onClick={() => setCurrentView('lucidlink')}
+              >
+                🔗 LucidLink
+              </button>
+            </nav>
+            <span style={{
+              fontSize: '0.875rem',
               color: '#6B7280',
-              fontWeight: 500 
+              fontWeight: 500,
+              marginLeft: '1rem'
             }}>
               Built by Bob AI Developer
             </span>
@@ -110,25 +127,31 @@ function App() {
 
       {/* Main Content */}
       <main className="main-content">
-        {/* Message Alert */}
-        {message && (
-          <div className={`alert alert-${message.type}`}>
-            {message.text}
-          </div>
+        {currentView === 'files' ? (
+          <>
+            {/* Message Alert */}
+            {message && (
+              <div className={`alert alert-${message.type}`}>
+                {message.text}
+              </div>
+            )}
+
+            {/* Storage Statistics */}
+            <StorageStats stats={stats} loading={loading} />
+
+            {/* Upload Form */}
+            <UploadForm onUpload={handleUpload} uploading={uploading} />
+
+            {/* File List */}
+            <FileList
+              files={files}
+              onDelete={handleDelete}
+              loading={loading}
+            />
+          </>
+        ) : (
+          <LucidLinkDashboard />
         )}
-
-        {/* Storage Statistics */}
-        <StorageStats stats={stats} loading={loading} />
-
-        {/* Upload Form */}
-        <UploadForm onUpload={handleUpload} uploading={uploading} />
-
-        {/* File List */}
-        <FileList 
-          files={files} 
-          onDelete={handleDelete} 
-          loading={loading}
-        />
       </main>
 
       {/* Footer */}

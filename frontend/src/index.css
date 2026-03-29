@@ -92,6 +92,41 @@ body {
   display: flex;
   gap: 1rem;
   align-items: center;
+/* Navigation Tabs */
+.nav-tabs {
+  display: flex;
+  gap: 0.5rem;
+  background: #F3F4F6;
+  padding: 0.25rem;
+  border-radius: 8px;
+}
+
+.nav-tab {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-tab:hover {
+  background: rgba(0, 102, 255, 0.1);
+  color: var(--primary-blue);
+}
+
+.nav-tab.active {
+  background: white;
+  color: var(--primary-blue);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
 }
 
 .main-content {
