@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bob-rules version="1.0">
+  
+  <!-- 
+    Bob AI Developer - Business Rules & Constraints
+    
+    These rules define what Bob CAN and CANNOT do.
+    Bob will follow these rules and block requests that violate them.
+    
+    Purpose: Demonstrate AI governance and compliance
+  -->
+  
+  <metadata>
+    <name>LucidLink File API - Development Rules</name>
+    <description>Business rules and constraints for Bob AI Developer</description>
+    <version>1.0.0</version>
+    <effective-date>2026-03-29</effective-date>
+    <owner>LucidLink Engineering Team</owner>
+  </metadata>
+
+  <!-- SECURITY RULES -->
+  <security-rules>
+    
+    <rule id="SEC-001" severity="critical" enabled="true">
+      <name>No Hardcoded Credentials</name>
+      <description>Bob must never commit hardcoded passwords, API keys, or tokens</description>
+      <violation-action>block</violation-action>
+      <patterns>
+        <pattern type="regex">password\s*=\s*["'][^"']+["']</pattern>
+        <pattern type="regex">api[_-]?key\s*=\s*["'][^"']+["']</pattern>
+        <pattern type="regex">secret\s*=\s*["'][^"']+["']</pattern>
+        <pattern type="regex">token\s*=\s*["'][^"']+["']</pattern>
+      </patterns>
+      <exceptions>
+        <file>.env.example</file>
+        <file>tests/**/*.test.js</file>
+      </exceptions>
+      <message>❌ BLOCKED: Cannot commit hardcoded credentials. Use environment variables instead.</message>
+    </rule>
+
+    <rule id="SEC-002" severity="high" enabled="true">
+      <name>No SQL Injection Vulnerabilities</name>
+      <description>Bob must use parameterized queries, never string concatenation</description>
+      <violation-action>block</violation-action>
+      <patterns>
+        <pattern type="regex">query\s*\+\s*["']</pattern>
+        <pattern type="regex">["']\s*\+\s*req\.(body|params|query)</pattern>
+      </patterns>
+      <message>❌ BLOCKED: Potential SQL injection vulnerability. Use parameterized queries.</message>
+    </rule>
+
+    <rule id="SEC-003" severity="high" enabled="true">
+      <name>Require Authentication Middleware</name>
+      <description>All API routes must have authentication</description>
+      <violation-action>warn</violation-action>
+      <applies-to>
+        <file-pattern>backend/routes/*.js</file-pattern>
+      </applies-to>
+      <required-middleware>auth</required-middleware>
+      <message>⚠️  WARNING: API route should include authentication middleware.</message>
+    </rule>
+
+  </security-rules>
+
+  <!-- DATA VALIDATION RULES -->
+  <validation-rules>
+    
+    <rule id="VAL-001" severity="high" enabled="true">
+      <name>File Size Limits</name>
+      <description>File upload size must be between 1MB and 500MB</description>
+      <violation-action>block</violation-action>
+      <constraints>
+        <min-size unit="MB">1</min-size>
+        <max-size unit="MB">500</max-size>
+      </constraints>
+      <message>❌ BLOCKED: File size must be between 1MB and 500MB. Requested size violates policy.</message>
+    </rule>
+
+    <rule id="VAL-002" severity="medium" enabled="true">
+      <name>Input Validation Required</name>
+      <description>All user inputs must be validated</description>
+      <violation-action>warn</violation-action>
+      <requires>
+        <validation-library>validator.js</validation-library>
+        <sanitization>true</sanitization>
+      </requires>
+      <message>⚠️  WARNING: User input should be validated and sanitized.</message>
+    </rule>
+
+    <rule id="VAL-003" severity="high" enabled="true">
+      <name>Email Format Validation</name>
+      <description>Email addresses must follow RFC 5322 standard</description>
+      <violation-action>block</violation-action>
+      <pattern>^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$</pattern>
+      <message>❌ BLOCKED: Invalid email format. Must follow RFC 5322 standard.</message>
+    </rule>
+
+  </validation-rules>
+
+  <!-- CODE QUALITY RULES -->
+  <code-quality-rules>
+    
+    <rule id="QUA-001" severity="medium" enabled="true">
+      <name>Test Coverage Required</name>
+      <description>All new features must have unit tests</description>
+      <violation-action>warn</violation-action>
+      <requirements>
+        <min-coverage>80</min-coverage>
+        <test-file-required>true</test-file-required>
+      </requirements>
+      <message>⚠️  WARNING: New feature should include unit tests (80% coverage minimum).</message>
+    </rule>
+
+    <rule id="QUA-002" severity="low" enabled="true">
+      <name>No Console.log in Production</name>
+      <description>Remove console.log statements before committing</description>
+      <violation-action>warn</violation-action>
+      <patterns>
+        <pattern>console\.log\(</pattern>
+        <pattern>console\.debug\(</pattern>
+      </patterns>
+      <exceptions>
+        <file>tests/**/*.js</file>
+        <file>scripts/**/*.js</file>
+      </exceptions>
+      <message>⚠️  WARNING: Remove console.log statements. Use proper logging library.</message>
+    </rule>
+
+    <rule id="QUA-003" severity="medium" enabled="true">
+      <name>Error Handling Required</name>
+      <description>All async functions must have try-catch blocks</description>
+      <violation-action>warn</violation-action>
+      <applies-to>
+        <function-type>async</function-type>
+      </applies-to>
+      <message>⚠️  WARNING: Async function should include try-catch error handling.</message>
+    </rule>
+
+  </code-quality-rules>
+
+  <!-- BUSINESS LOGIC RULES -->
+  <business-rules>
+    
+    <rule id="BUS-001" severity="critical" enabled="true">
+      <name>No Direct Database Access</name>
+      <description>Must use service layer, never direct DB queries in routes</description>
+      <violation-action>block</violation-action>
+      <applies-to>
+        <file-pattern>backend/routes/*.js</file-pattern>
+      </applies-to>
+      <forbidden-imports>
+        <import>mysql</import>
+        <import>pg</import>
+        <import>mongodb</import>
+      </forbidden-imports>
+      <message>❌ BLOCKED: Routes must use service layer. No direct database access allowed.</message>
+    </rule>
+
+    <rule id="BUS-002" severity="high" enabled="true">
+      <name>Rate Limiting Required</name>
+      <description>Public APIs must have rate limiting</description>
+      <violation-action>warn</violation-action>
+      <requirements>
+        <max-requests-per-minute>100</max-requests-per-minute>
+        <rate-limit-middleware>true</rate-limit-middleware>
+      </requirements>
+      <message>⚠️  WARNING: Public API should include rate limiting middleware.</message>
+    </rule>
+
+    <rule id="BUS-003" severity="medium" enabled="true">
+      <name>API Versioning Required</name>
+      <description>All API endpoints must include version in path</description>
+      <violation-action>warn</violation-action>
+      <pattern>/api/v\d+/</pattern>
+      <message>⚠️  WARNING: API endpoint should include version (e.g., /api/v1/).</message>
+    </rule>
+
+    <rule id="BUS-004" severity="high" enabled="true">
+      <name>No Breaking Changes Without Approval</name>
+      <description>Breaking API changes require explicit approval</description>
+      <violation-action>block</violation-action>
+      <breaking-changes>
+        <change>remove-endpoint</change>
+        <change>change-response-format</change>
+        <change>rename-field</change>
+      </breaking-changes>
+      <requires-approval>true</requires-approval>
+      <message>❌ BLOCKED: Breaking API change detected. Requires approval from API team.</message>
+    </rule>
+
+  </business-rules>
+
+  <!-- DEPLOYMENT RULES -->
+  <deployment-rules>
+    
+    <rule id="DEP-001" severity="critical" enabled="true">
+      <name>No Direct Production Commits</name>
+      <description>All changes must go through PR review</description>
+      <violation-action>block</violation-action>
+      <protected-branches>
+        <branch>main</branch>
+        <branch>production</branch>
+      </protected-branches>
+      <requires>
+        <pull-request>true</pull-request>
+        <approvals>1</approvals>
+      </requires>
+      <message>❌ BLOCKED: Cannot commit directly to main. Create a PR instead.</message>
+    </rule>
+
+    <rule id="DEP-002" severity="high" enabled="true">
+      <name>Tests Must Pass</name>
+      <description>All tests must pass before merging</description>
+      <violation-action>block</violation-action>
+      <requirements>
+        <test-status>passing</test-status>
+        <coverage-threshold>80</coverage-threshold>
+      </requirements>
+      <message>❌ BLOCKED: Tests must pass before merging. Fix failing tests first.</message>
+    </rule>
+
+    <rule id="DEP-003" severity="medium" enabled="true">
+      <name>Semantic Versioning</name>
+      <description>Version numbers must follow semver (MAJOR.MINOR.PATCH)</description>
+      <violation-action>warn</violation-action>
+      <pattern>^\d+\.\d+\.\d+$</pattern>
+      <message>⚠️  WARNING: Version should follow semantic versioning (e.g., 1.2.3).</message>
+    </rule>
+
+  </deployment-rules>
+
+  <!-- COMPLIANCE RULES -->
+  <compliance-rules>
+    
+    <rule id="COM-001" severity="critical" enabled="true">
+      <name>No PII in Logs</name>
+      <description>Personal Identifiable Information must not be logged</description>
+      <violation-action>block</violation-action>
+      <forbidden-fields>
+        <field>password</field>
+        <field>ssn</field>
+        <field>credit_card</field>
+        <field>email</field>
+        <field>phone</field>
+      </forbidden-fields>
+      <message>❌ BLOCKED: Cannot log PII data. Remove sensitive information from logs.</message>
+    </rule>
+
+    <rule id="COM-002" severity="high" enabled="true">
+      <name>GDPR Compliance</name>
+      <description>User data must be deletable (right to be forgotten)</description>
+      <violation-action>warn</violation-action>
+      <requirements>
+        <delete-endpoint>true</delete-endpoint>
+        <data-export>true</data-export>
+      </requirements>
+      <message>⚠️  WARNING: Ensure GDPR compliance - users must be able to delete their data.</message>
+    </rule>
+
+    <rule id="COM-003" severity="medium" enabled="true">
+      <name>License Headers Required</name>
+      <description>All source files must include license header</description>
+      <violation-action>warn</violation-action>
+      <applies-to>
+        <file-pattern>**/*.js</file-pattern>
+        <file-pattern>**/*.jsx</file-pattern>
+      </applies-to>
+      <message>⚠️  WARNING: Source file should include license header.</message>
+    </rule>
+
+  </compliance-rules>
+
+  <!-- DEMO-SPECIFIC RULES -->
+  <demo-rules>
+    
+    <rule id="DEMO-001" severity="high" enabled="true">
+      <name>LucidLink Branding</name>
+      <description>UI must maintain LucidLink brand colors and style</description>
+      <violation-action>warn</violation-action>
+      <brand-colors>
+        <primary>#0066CC</primary>
+        <secondary>#00A3E0</secondary>
+        <accent>#FF6B35</accent>
+      </brand-colors>
+      <message>⚠️  WARNING: Maintain LucidLink brand colors in UI changes.</message>
+    </rule>
+
+    <rule id="DEMO-002" severity="medium" enabled="true">
+      <name>Demo Data Only</name>
+      <description>Use mock/demo data, never real customer data</description>
+      <violation-action>block</violation-action>
+      <requirements>
+        <mock-data>true</mock-data>
+        <real-data>false</real-data>
+      </requirements>
+      <message>❌ BLOCKED: Demo must use mock data only. No real customer data allowed.</message>
+    </rule>
+
+  </demo-rules>
+
+  <!-- RULE ENFORCEMENT SETTINGS -->
+  <enforcement>
+    <mode>strict</mode>
+    <auto-fix>false</auto-fix>
+    <notify-on-violation>true</notify-on-violation>
+    <log-violations>true</log-violations>
+    <violation-log>.bob/violations.log</violation-log>
+  </enforcement>
+
+  <!-- EXEMPTIONS -->
+  <exemptions>
+    <exemption id="EX-001">
+      <rule>QUA-002</rule>
+      <reason>Development debugging</reason>
+      <files>
+        <file>scripts/debug.js</file>
+      </files>
+      <expires>2026-12-31</expires>
+    </exemption>
+  </exemptions>
+
+</bob-rules>
+
+<!-- Made with Bob -->
