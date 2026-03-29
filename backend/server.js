@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const fileRoutes = require('./routes/files');
+const lucidlinkRoutes = require('./routes/lucidlink');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,6 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/files', fileRoutes);
+app.use('/api/lucidlink', lucidlinkRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -29,7 +31,10 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       files: '/api/files',
-      upload: '/api/files/upload'
+      upload: '/api/files/upload',
+      lucidlink: '/api/lucidlink',
+      filespaces: '/api/lucidlink/filespaces',
+      domains: '/api/lucidlink/domains'
     }
   });
 });
