@@ -2,7 +2,7 @@
  * Validation utilities for file operations
  */
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
 const ALLOWED_FILE_TYPES = [
   'image/jpeg',
   'image/png',
