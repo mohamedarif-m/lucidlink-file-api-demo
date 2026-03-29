@@ -82,10 +82,10 @@ describe('File API Endpoints', () => {
       expect(response.body.error).toContain('size');
     });
 
-    test('should reject file exceeding 100MB size limit', async () => {
+    test('should reject file exceeding 200MB size limit', async () => {
       const fileData = {
         name: 'large-file.mp4',
-        size: 101 * 1024 * 1024, // 101MB
+        size: 201 * 1024 * 1024, // 201MB
         type: 'video/mp4'
       };
 
@@ -95,13 +95,13 @@ describe('File API Endpoints', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('100MB');
+      expect(response.body.error).toContain('200MB');
     });
 
-    test('should accept file at exactly 100MB', async () => {
+    test('should accept file at exactly 200MB', async () => {
       const fileData = {
         name: 'max-size-file.mp4',
-        size: 100 * 1024 * 1024, // Exactly 100MB
+        size: 200 * 1024 * 1024, // Exactly 200MB
         type: 'video/mp4'
       };
 
@@ -111,7 +111,7 @@ describe('File API Endpoints', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
-      expect(response.body.data.size).toBe(100 * 1024 * 1024);
+      expect(response.body.data.size).toBe(200 * 1024 * 1024);
     });
 
     test('should reject file with zero size', async () => {
