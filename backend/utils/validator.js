@@ -2,7 +2,8 @@
  * Validation utilities for file operations
  */
 
-const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
+const MIN_FILE_SIZE = 1 * 1024 * 1024; // 1MB
+const MAX_FILE_SIZE = 300 * 1024 * 1024; // 300MB (updated from 500MB per issue #10)
 const ALLOWED_FILE_TYPES = [
   'image/jpeg',
   'image/png',
@@ -11,6 +12,8 @@ const ALLOWED_FILE_TYPES = [
   'text/plain',
   'application/json',
   'video/mp4',
+  'video/quicktime',
+  'video/x-msvideo',
   'application/octet-stream'
 ];
 
@@ -24,6 +27,13 @@ const validateFileSize = (size) => {
     return {
       valid: false,
       error: 'File size must be greater than 0'
+    };
+  }
+
+  if (size < MIN_FILE_SIZE) {
+    return {
+      valid: false,
+      error: `File size is below minimum allowed size of ${MIN_FILE_SIZE / (1024 * 1024)}MB`
     };
   }
 
@@ -124,6 +134,7 @@ module.exports = {
   validateFileType,
   validateFileName,
   validateFile,
+  MIN_FILE_SIZE,
   MAX_FILE_SIZE,
   ALLOWED_FILE_TYPES
 };

@@ -9,7 +9,7 @@ const {
 describe('Validator Utilities', () => {
   describe('validateFileSize', () => {
     test('should accept valid file size', () => {
-      const result = validateFileSize(1024);
+      const result = validateFileSize(5 * 1024 * 1024); // 5MB
       expect(result.valid).toBe(true);
     });
 
@@ -32,6 +32,25 @@ describe('Validator Utilities', () => {
 
     test('should accept maximum allowed size', () => {
       const result = validateFileSize(MAX_FILE_SIZE);
+      expect(result.valid).toBe(true);
+    });
+
+    test('should reject 301MB file (exceeds 300MB limit)', () => {
+      const size301MB = 301 * 1024 * 1024;
+      const result = validateFileSize(size301MB);
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('exceeds maximum allowed size of 300MB');
+    });
+
+    test('should accept 300MB file (at limit)', () => {
+      const size300MB = 300 * 1024 * 1024;
+      const result = validateFileSize(size300MB);
+      expect(result.valid).toBe(true);
+    });
+
+    test('should accept 299MB file (under limit)', () => {
+      const size299MB = 299 * 1024 * 1024;
+      const result = validateFileSize(size299MB);
       expect(result.valid).toBe(true);
     });
   });
@@ -100,7 +119,7 @@ describe('Validator Utilities', () => {
     test('should accept valid file data', () => {
       const fileData = {
         name: 'test.txt',
-        size: 1024,
+        size: 5 * 1024 * 1024, // 5MB
         type: 'text/plain'
       };
       const result = validateFile(fileData);
@@ -140,7 +159,7 @@ describe('Validator Utilities', () => {
     test('should accept file without type specified', () => {
       const fileData = {
         name: 'test.txt',
-        size: 1024
+        size: 5 * 1024 * 1024 // 5MB
       };
       const result = validateFile(fileData);
       expect(result.valid).toBe(true);
