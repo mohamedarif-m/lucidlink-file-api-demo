@@ -132,10 +132,11 @@ const UploadForm = ({ onUpload, uploading }) => {
               placeholder="Auto-generated"
               step="1"
               min="1"
+              max="300"
               required
             />
             <small className="input-hint">
-              Enter file size in MB (whole numbers)
+              Enter file size in MB (1-300 MB allowed)
             </small>
           </div>
 
