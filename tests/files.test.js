@@ -28,8 +28,8 @@ describe('File API Endpoints', () => {
 
     test('should return list of files', async () => {
       // Add test files
-      await fileService.uploadFile({ name: 'test1.txt', size: 1024 });
-      await fileService.uploadFile({ name: 'test2.txt', size: 2048 });
+      await fileService.uploadFile({ name: 'test1.txt', size: 5 * 1024 * 1024 }); // 5MB
+      await fileService.uploadFile({ name: 'test2.txt', size: 10 * 1024 * 1024 }); // 10MB
 
       const response = await request(app).get('/api/files');
       expect(response.status).toBe(200);
@@ -43,7 +43,7 @@ describe('File API Endpoints', () => {
     test('should upload file successfully', async () => {
       const fileData = {
         name: 'test.txt',
-        size: 1024,
+        size: 5 * 1024 * 1024, // 5MB
         type: 'text/plain'
       };
 
@@ -54,12 +54,12 @@ describe('File API Endpoints', () => {
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
       expect(response.body.data.name).toBe('test.txt');
-      expect(response.body.data.size).toBe(1024);
+      expect(response.body.data.size).toBe(5 * 1024 * 1024);
       expect(response.body.data.id).toBeDefined();
     });
 
     test('should reject upload without name', async () => {
-      const fileData = { size: 1024 };
+      const fileData = { size: 5 * 1024 * 1024 }; // 5MB
 
       const response = await request(app)
         .post('/api/files/upload')
@@ -82,10 +82,10 @@ describe('File API Endpoints', () => {
       expect(response.body.error).toContain('size');
     });
 
-    test('should reject file exceeding 200MB size limit', async () => {
+    test('should reject file exceeding 300MB size limit', async () => {
       const fileData = {
         name: 'large-file.mp4',
-        size: 201 * 1024 * 1024, // 201MB
+        size: 301 * 1024 * 1024, // 301MB
         type: 'video/mp4'
       };
 
@@ -95,13 +95,13 @@ describe('File API Endpoints', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('200MB');
+      expect(response.body.error).toContain('300MB');
     });
 
-    test('should accept file at exactly 200MB', async () => {
+    test('should accept file at exactly 300MB', async () => {
       const fileData = {
         name: 'max-size-file.mp4',
-        size: 200 * 1024 * 1024, // Exactly 200MB
+        size: 300 * 1024 * 1024, // Exactly 300MB
         type: 'video/mp4'
       };
 
@@ -111,7 +111,7 @@ describe('File API Endpoints', () => {
 
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
-      expect(response.body.data.size).toBe(200 * 1024 * 1024);
+      expect(response.body.data.size).toBe(300 * 1024 * 1024);
     });
 
     test('should reject file with zero size', async () => {
@@ -151,7 +151,7 @@ describe('File API Endpoints', () => {
     test('should get file by id', async () => {
       const file = await fileService.uploadFile({
         name: 'test.txt',
-        size: 1024
+        size: 5 * 1024 * 1024 // 5MB
       });
 
       const response = await request(app).get(`/api/files/${file.id}`);
@@ -171,7 +171,7 @@ describe('File API Endpoints', () => {
     test('should delete file successfully', async () => {
       const file = await fileService.uploadFile({
         name: 'test.txt',
-        size: 1024
+        size: 5 * 1024 * 1024 // 5MB
       });
 
       const response = await request(app).delete(`/api/files/${file.id}`);
@@ -192,15 +192,15 @@ describe('File API Endpoints', () => {
 
   describe('GET /api/files/stats/storage', () => {
     test('should return storage statistics', async () => {
-      await fileService.uploadFile({ name: 'test1.txt', size: 1024 });
-      await fileService.uploadFile({ name: 'test2.txt', size: 2048 });
+      await fileService.uploadFile({ name: 'test1.txt', size: 5 * 1024 * 1024 }); // 5MB
+      await fileService.uploadFile({ name: 'test2.txt', size: 10 * 1024 * 1024 }); // 10MB
 
       const response = await request(app).get('/api/files/stats/storage');
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.data.totalFiles).toBe(2);
-      expect(response.body.data.totalBytes).toBe(3072);
-      expect(response.body.data.averageFileSize).toBe(1536);
+      expect(response.body.data.totalBytes).toBe(15 * 1024 * 1024);
+      expect(response.body.data.averageFileSize).toBe(7.5 * 1024 * 1024);
     });
 
     test('should return zero stats when no files', async () => {
